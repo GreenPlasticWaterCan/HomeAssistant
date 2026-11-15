@@ -157,4 +157,43 @@ actions:
                       data: { brightness_step_pct: 10 }
                 - delay: { milliseconds: 400 }
 
-      # ---- RIGHT:
+      # ---- RIGHT: press = toggle Niels ----
+      - conditions: "{{ command == 'arrow_right_click' or (command == 'press' and arg0 == 256) }}"
+        sequence:
+          - choose:
+              - conditions: "{{ is_state(niels, 'on') }}"
+                sequence:
+                  - action: light.turn_off
+                    target: { entity_id: "{{ niels }}" }
+            default:
+              - action: light.turn_on
+                target: { entity_id: "{{ niels }}" }
+                data: { brightness_pct: "{{ default_pct }}" }
+
+      # ---- RIGHT: hold = cycle brightness Niels ----
+      - conditions: "{{ command == 'arrow_right_hold' or (command == 'hold' and arg0 == 3328) }}"
+        sequence:
+          - repeat:
+              count: 40
+              sequence:
+                - choose:
+                    - conditions: "{{ is_state(niels, 'off') }}"
+                      sequence:
+                        - action: light.turn_on
+                          target: { entity_id: "{{ niels }}" }
+                          data: { brightness_pct: "{{ default_pct }}" }
+                    - conditions: "{{ state_attr(niels, 'brightness') | int(0) >= 250 }}"
+                      sequence:
+                        - action: light.turn_on
+                          target: { entity_id: "{{ niels }}" }
+                          data: { brightness_pct: 5 }
+                  default:
+                    - action: light.turn_on
+                      target: { entity_id: "{{ niels }}" }
+                      data: { brightness_step_pct: 10 }
+                - delay: { milliseconds: 400 }
+
+      # ---- Any release stops the running loop ----
+      - conditions: "{{ command in ['stop_with_on_off', 'stop', 'release', 'arrow_left_release', 'arrow_right_release'] }}"
+        sequence:
+          - stop: "Button released"
