@@ -10,11 +10,9 @@ input:
   remote: 1e5935130fcf3303e17bb88322a40c42
   light:
     device_id:
-      - 4998676b2a0ba4e7e885b4c634b7ada1  # Nachtkastje Jess
-      - f60174698fe29dec8b3de139e6bad1cb  # General lights
-      - d6d12bfd49558d5435817b3f2aac7825  # Nachtkastje Niels
-  brightness_step: 10
-  dim_brightness_decrease_step: 10
+      - 4998676b2a0ba4e7e885b4c634b7ada1
+      - f60174698fe29dec8b3de139e6bad1cb
+      - d6d12bfd49558d5435817b3f2aac7825
 
 use_blueprint:
   path: Malte/zha-ikea-four-button-remote-styrbar-for-lights-e2001-e2002.yaml
@@ -22,14 +20,96 @@ use_blueprint:
     remote: '{{ remote }}'
     light:
       device_id:
-        - {{ light.device_id[0] }}  # Nachtkastje Jess
-        - {{ light.device_id[1] }}  # General lights
-        - {{ light.device_id[2] }}  # Nachtkastje Niels
-    brightness_step: '{{ brightness_step }}'
-    dim_brightness_decrease_step: '{{ dim_brightness_decrease_step }}'
+        - 4998676b2a0ba4e7e885b4c634b7ada1
+        - f60174698fe29dec8b3de139e6bad1cb
+        - d6d12bfd49558d5435817b3f2aac7825
 
+    # ─── TOP BUTTON: All 3 Lights ────────────────────────────────
     button_top_short:
       - type: state_set
         state: on
-        device_id: '{{ light.device_id[0] }}'
-        entity_id: 'light.nachtkastje
+        device_id: 4998676b2a0ba4e7e885b4c634b7ada1
+        entity_id: 'light.nachtkastje_jess'
+        domain: light
+      - type: state_set
+        state: on
+        device_id: f60174698fe29dec8b3de139e6bad1cb
+        entity_id: 'light.general_lights'
+        domain: light
+      - type: state_set
+        state: on
+        device_id: d6d12bfd49558d5435817b3f2aac7825
+        entity_id: 'light.nachtkastje_niels'
+        domain: light
+
+    button_top_long:
+      - type: brightness_increase
+        device_id: 4998676b2a0ba4e7e885b4c634b7ada1
+        entity_id: 'light.nachtkastje_jess'
+        domain: light
+      - type: brightness_increase
+        device_id: f60174698fe29dec8b3de139e6bad1cb
+        entity_id: 'light.general_lights'
+        domain: light
+      - type: brightness_increase
+        device_id: d6d12bfd49558d5435817b3f2aac7825
+        entity_id: 'light.nachtkastje_niels'
+        domain: light
+
+    # ─── BOTTOM BUTTON: All 3 Lights ─────────────────────────────
+    button_bottom_short:
+      - type: state_set
+        state: off
+        device_id: 4998676b2a0ba4e7e885b4c634b7ada1
+        entity_id: 'light.nachtkastje_jess'
+        domain: light
+      - type: state_set
+        state: off
+        device_id: f60174698fe29dec8b3de139e6bad1cb
+        entity_id: 'light.general_lights'
+        domain: light
+      - type: state_set
+        state: off
+        device_id: d6d12bfd49558d5435817b3f2aac7825
+        entity_id: 'light.nachtkastje_niels'
+        domain: light
+
+    button_bottom_long:
+      - type: brightness_decrease
+        device_id: 4998676b2a0ba4e7e885b4c634b7ada1
+        entity_id: 'light.nachtkastje_jess'
+        domain: light
+      - type: brightness_decrease
+        device_id: f60174698fe29dec8b3de139e6bad1cb
+        entity_id: 'light.general_lights'
+        domain: light
+      - type: brightness_decrease
+        device_id: d6d12bfd49558d5435817b3f2aac7825
+        entity_id: 'light.nachtkastje_niels'
+        domain: light
+
+    # ─── LEFT BUTTON: Nachtkastje Jess ────────────────────────────
+    button_left_short:
+      - type: toggle
+        device_id: 4998676b2a0ba4e7e885b4c634b7ada1
+        entity_id: 'light.nachtkastje_jess'
+        domain: light
+
+    button_left_long:
+      - type: brightness_decrease
+        device_id: 4998676b2a0ba4e7e885b4c634b7ada1
+        entity_id: 'light.nachtkastje_jess'
+        domain: light
+
+    # ─── RIGHT BUTTON: Nachtkastje Niels ──────────────────────────
+    button_right_short:
+      - type: toggle
+        device_id: d6d12bfd49558d5435817b3f2aac7825
+        entity_id: 'light.nachtkastje_niels'
+        domain: light
+
+    button_right_long:
+      - type: brightness_decrease
+        device_id: d6d12bfd49558d5435817b3f2aac7825
+        entity_id: 'light.nachtkastje_niels'
+        domain: light
