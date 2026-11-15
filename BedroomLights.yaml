@@ -1,7 +1,7 @@
 blueprint:
   name: IKEA Remote Control N2 - Bedroom lights
   description: >
-    Top: press = all on, hold = brighter.
+    Top: press = all on at default level, hold = brighter.
     Bottom: press = all off, hold = dimmer.
     Left: press = toggle Jess, hold = cycle brightness Jess.
     Right: press = toggle Niels, hold = cycle brightness Niels.
@@ -29,8 +29,17 @@ blueprint:
       selector:
         entity:
           domain: light
+    default_brightness:
+      name: Brightness when switching on (%)
+      description: Used whenever a light is turned on, regardless of its previous level.
+      default: 40
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: "%"
+          mode: slider
 
-# Restart mode: the release event cancels any running hold loop
 mode: restart
 max_exceeded: silent
 
@@ -38,8 +47,11 @@ variables:
   jess: !input light_jess
   niels: !input light_niels
   third: !input light_third
+  default_pct: !input default_brightness
   command: "{{ trigger.event.data.command }}"
   endpoint: "{{ trigger.event.data.endpoint_id | default(1) }}"
+  args: "{{ trigger.event.data.args | default([]) }}"
+  arg0: "{{ args[0] if (args is list and args | length > 0) else none }}"
 
 triggers:
   - trigger: event
@@ -49,12 +61,14 @@ triggers:
 
 actions:
   - choose:
-      # ---- TOP: press = all on ----
+      # ---- TOP: press = all on at default level ----
       - conditions: "{{ command == 'on' and endpoint == 1 }}"
         sequence:
           - action: light.turn_on
             target:
               entity_id: ["{{ jess }}", "{{ niels }}", "{{ third }}"]
+            data:
+              brightness_pct: "{{ default_pct }}"
 
       # ---- TOP: hold = brighter ----
       - conditions: "{{ command == 'move_with_on_off' }}"
@@ -92,19 +106,30 @@ actions:
                 - delay: { milliseconds: 300 }
 
       # ---- LEFT: press = toggle Jess ----
-      - conditions: "{{ command == 'arrow_left_click' }}"
+      - conditions: "{{ command == 'arrow_left_click' or (command == 'press' and arg0 == 257) }}"
         sequence:
-          - action: light.toggle
-            target:
-              entity_id: "{{ jess }}"
+          - choose:
+              - conditions: "{{ is_state(jess, 'on') }}"
+                sequence:
+                  - action: light.turn_off
+                    target: { entity_id: "{{ jess }}" }
+            default:
+              - action: light.turn_on
+                target: { entity_id: "{{ jess }}" }
+                data: { brightness_pct: "{{ default_pct }}" }
 
       # ---- LEFT: hold = cycle brightness Jess ----
-      - conditions: "{{ command == 'arrow_left_hold' }}"
+      - conditions: "{{ command == 'arrow_left_hold' or (command == 'hold' and arg0 == 3329) }}"
         sequence:
           - repeat:
               count: 40
               sequence:
                 - choose:
+                    - conditions: "{{ is_state(jess, 'off') }}"
+                      sequence:
+                        - action: light.turn_on
+                          target: { entity_id: "{{ jess }}" }
+                          data: { brightness_pct: "{{ default_pct }}" }
                     - conditions: "{{ state_attr(jess, 'brightness') | int(0) >= 250 }}"
                       sequence:
                         - action: light.turn_on
@@ -117,19 +142,30 @@ actions:
                 - delay: { milliseconds: 400 }
 
       # ---- RIGHT: press = toggle Niels ----
-      - conditions: "{{ command == 'arrow_right_click' }}"
+      - conditions: "{{ command == 'arrow_right_click' or (command == 'press' and arg0 == 256) }}"
         sequence:
-          - action: light.toggle
-            target:
-              entity_id: "{{ niels }}"
+          - choose:
+              - conditions: "{{ is_state(niels, 'on') }}"
+                sequence:
+                  - action: light.turn_off
+                    target: { entity_id: "{{ niels }}" }
+            default:
+              - action: light.turn_on
+                target: { entity_id: "{{ niels }}" }
+                data: { brightness_pct: "{{ default_pct }}" }
 
       # ---- RIGHT: hold = cycle brightness Niels ----
-      - conditions: "{{ command == 'arrow_right_hold' }}"
+      - conditions: "{{ command == 'arrow_right_hold' or (command == 'hold' and arg0 == 3328) }}"
         sequence:
           - repeat:
               count: 40
               sequence:
                 - choose:
+                    - conditions: "{{ is_state(niels, 'off') }}"
+                      sequence:
+                        - action: light.turn_on
+                          target: { entity_id: "{{ niels }}" }
+                          data: { brightness_pct: "{{ default_pct }}" }
                     - conditions: "{{ state_attr(niels, 'brightness') | int(0) >= 250 }}"
                       sequence:
                         - action: light.turn_on
@@ -141,7 +177,7 @@ actions:
                       data: { brightness_step_pct: 10 }
                 - delay: { milliseconds: 400 }
 
-      # ---- Any release event just stops the running loop ----
-      - conditions: "{{ command in ['stop_with_on_off', 'stop', 'arrow_left_release', 'arrow_right_release'] }}"
+      # ---- Any release stops the running loop ----
+      - conditions: "{{ command in ['stop_with_on_off', 'stop', 'release', 'arrow_left_release', 'arrow_right_release'] }}"
         sequence:
           - stop: "Button released"
