@@ -1,0 +1,35 @@
+name: 'Custom IKEA Remote - All Lights + Individual Control'
+description: |
+  Maps your 4-button remote to:
+  • Top Button: Short=ON all, Hold=Dim Up all
+  • Bottom Button: Short=OFF all, Hold=Dim Down all
+  • Left Button: Short=Toggle Jess, Hold=Cycle/Dim Down Jess
+  • Right Button: Short=Toggle Niels, Hold=Cycle/Dim Down Niels
+
+input:
+  remote: 1e5935130fcf3303e17bb88322a40c42
+  light:
+    device_id:
+      - 4998676b2a0ba4e7e885b4c634b7ada1  # Nachtkastje Jess
+      - f60174698fe29dec8b3de139e6bad1cb  # General lights
+      - d6d12bfd49558d5435817b3f2aac7825  # Nachtkastje Niels
+  brightness_step: 10
+  dim_brightness_decrease_step: 10
+
+use_blueprint:
+  path: Malte/zha-ikea-four-button-remote-styrbar-for-lights-e2001-e2002.yaml
+  input:
+    remote: '{{ remote }}'
+    light:
+      device_id:
+        - {{ light.device_id[0] }}  # Nachtkastje Jess
+        - {{ light.device_id[1] }}  # General lights
+        - {{ light.device_id[2] }}  # Nachtkastje Niels
+    brightness_step: '{{ brightness_step }}'
+    dim_brightness_decrease_step: '{{ dim_brightness_decrease_step }}'
+
+    button_top_short:
+      - type: state_set
+        state: on
+        device_id: '{{ light.device_id[0] }}'
+        entity_id: 'light.nachtkastje
