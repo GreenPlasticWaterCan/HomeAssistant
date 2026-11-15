@@ -1,81 +1,70 @@
-name: 'Custom IKEA Remote - All Lights + Individual Control'
+version: 1.0
+name: Custom IKEA Remote
 description: |
   Maps your 4-button remote to:
-  • Top Button: Short=ON all, Hold=Dim Up all
-  • Bottom Button: Short=OFF all, Hold=Dim Down all
-  • Left Button: Short=Toggle Jess, Hold=Cycle/Dim Down Jess
-  • Right Button: Short=Toggle Niels, Hold=Cycle/Dim Down Niels
+  Top Short: Turn ON all | Hold: Dim UP all
+  Bottom Short: Turn OFF all | Hold: Dim DOWN all
+  Left Short: Toggle Jess | Hold: Dim DOWN Jess
+  Right Short: Toggle Niels | Hold: Dim DOWN Niels
 
-input:
-  remote: 1e5935130fcf3303e17bb88322a40c42
-  light:
-    device_id:
-      - 4998676b2a0ba4e7e885b4c634b7ada1
-      - f60174698fe29dec8b3de139e6bad1cb
-      - d6d12bfd49558d5435817b3f2aac7825
-
-# ─── TOP BUTTON (All 3 Lights) ──────────────────────────────────────
 button_top_short:
   - type: state_set
     state: on
-    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1
+    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1 
   - type: state_set
     state: on
-    entity_id: f60174698fe29dec8b3de139e6bad1cb     
+    entity_id: f60174698fe29dec8b3de139e6bad1cb
   - type: state_set
     state: on
-    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1  
+    entity_id: d6d12bfd49558d5435817b3f2aac7825
 
 button_top_long:
   - type: brightness_increase
     step: 10
-    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1
+    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1 
   - type: brightness_increase
     step: 10
-    entity_id: f60174698fe29dec8b3de139e6bad1cb 
+    entity_id: f60174698fe29dec8b3de139e6bad1cb
   - type: brightness_increase
     step: 10
-    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1
+    entity_id: d6d12bfd49558d5435817b3f2aac7825
 
-# ─── BOTTOM BUTTON (All 3 Lights) ───────────────────────────────────
 button_bottom_short:
   - type: state_set
     state: off
-    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1
+    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1 
   - type: state_set
     state: off
-    entity_id: f60174698fe29dec8b3de139e6bad1cb 
+    entity_id: f60174698fe29dec8b3de139e6bad1cb
   - type: state_set
     state: off
-    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1
+    entity_id: d6d12bfd49558d5435817b3f2aac7825
 
 button_bottom_long:
   - type: brightness_decrease
     step: 10
-    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1
+    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1 
   - type: brightness_decrease
     step: 10
-    entity_id: f60174698fe29dec8b3de139e6bad1cb 
+    entity_id: f60174698fe29dec8b3de139e6bad1cb
   - type: brightness_decrease
     step: 10
-    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1
+    entity_id: d6d12bfd49558d5435817b3f2aac7825
 
-# ─── LEFT BUTTON (Nachtkastje Jess) ────────────────────────────────
 button_left_short:
   - type: toggle
-    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1
+    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1 
 
 button_left_long:
   - type: brightness_decrease
     step: 10
-    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1
+    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1 
 
-# ─── RIGHT BUTTON (Nachtkastje Niels) ──────────────────────────────
 button_right_short:
   - type: toggle
-    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1
+    entity_id: d6d12bfd49558d5435817b3f2aac7825
 
 button_right_long:
   - type: brightness_decrease
     step: 10
-    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1
+    entity_id: d6d12bfd49558d5435817b3f2aac7825
