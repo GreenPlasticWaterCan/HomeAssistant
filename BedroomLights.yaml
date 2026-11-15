@@ -1,70 +1,147 @@
-version: 1.0
-name: Custom IKEA Remote
-description: |
-  Maps your 4-button remote to:
-  Top Short: Turn ON all | Hold: Dim UP all
-  Bottom Short: Turn OFF all | Hold: Dim DOWN all
-  Left Short: Toggle Jess | Hold: Dim DOWN Jess
-  Right Short: Toggle Niels | Hold: Dim DOWN Niels
+blueprint:
+  name: IKEA Remote Control N2 - Bedroom lights
+  description: >
+    Top: press = all on, hold = brighter.
+    Bottom: press = all off, hold = dimmer.
+    Left: press = toggle Jess, hold = cycle brightness Jess.
+    Right: press = toggle Niels, hold = cycle brightness Niels.
+  domain: automation
+  input:
+    remote:
+      name: Remote
+      selector:
+        device:
+          integration: zha
+          manufacturer: IKEA of Sweden
+          model: Remote Control N2
+    light_jess:
+      name: Nachtkastje Jess
+      selector:
+        entity:
+          domain: light
+    light_niels:
+      name: Nachtkastje Niels
+      selector:
+        entity:
+          domain: light
+    light_third:
+      name: Third light
+      selector:
+        entity:
+          domain: light
 
-button_top_short:
-  - type: state_set
-    state: on
-    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1 
-  - type: state_set
-    state: on
-    entity_id: f60174698fe29dec8b3de139e6bad1cb
-  - type: state_set
-    state: on
-    entity_id: d6d12bfd49558d5435817b3f2aac7825
+# Restart mode: the release event cancels any running hold loop
+mode: restart
+max_exceeded: silent
 
-button_top_long:
-  - type: brightness_increase
-    step: 10
-    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1 
-  - type: brightness_increase
-    step: 10
-    entity_id: f60174698fe29dec8b3de139e6bad1cb
-  - type: brightness_increase
-    step: 10
-    entity_id: d6d12bfd49558d5435817b3f2aac7825
+variables:
+  jess: !input light_jess
+  niels: !input light_niels
+  third: !input light_third
+  command: "{{ trigger.event.data.command }}"
+  endpoint: "{{ trigger.event.data.endpoint_id | default(1) }}"
 
-button_bottom_short:
-  - type: state_set
-    state: off
-    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1 
-  - type: state_set
-    state: off
-    entity_id: f60174698fe29dec8b3de139e6bad1cb
-  - type: state_set
-    state: off
-    entity_id: d6d12bfd49558d5435817b3f2aac7825
+triggers:
+  - trigger: event
+    event_type: zha_event
+    event_data:
+      device_id: !input remote
 
-button_bottom_long:
-  - type: brightness_decrease
-    step: 10
-    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1 
-  - type: brightness_decrease
-    step: 10
-    entity_id: f60174698fe29dec8b3de139e6bad1cb
-  - type: brightness_decrease
-    step: 10
-    entity_id: d6d12bfd49558d5435817b3f2aac7825
+actions:
+  - choose:
+      # ---- TOP: press = all on ----
+      - conditions: "{{ command == 'on' and endpoint == 1 }}"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: ["{{ jess }}", "{{ niels }}", "{{ third }}"]
 
-button_left_short:
-  - type: toggle
-    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1 
+      # ---- TOP: hold = brighter ----
+      - conditions: "{{ command == 'move_with_on_off' }}"
+        sequence:
+          - repeat:
+              count: 30
+              sequence:
+                - action: light.turn_on
+                  target:
+                    entity_id: ["{{ jess }}", "{{ niels }}", "{{ third }}"]
+                  data:
+                    brightness_step_pct: 7
+                    transition: 0.3
+                - delay: { milliseconds: 300 }
 
-button_left_long:
-  - type: brightness_decrease
-    step: 10
-    entity_id: 4998676b2a0ba4e7e885b4c634b7ada1 
+      # ---- BOTTOM: press = all off ----
+      - conditions: "{{ command == 'off' }}"
+        sequence:
+          - action: light.turn_off
+            target:
+              entity_id: ["{{ jess }}", "{{ niels }}", "{{ third }}"]
 
-button_right_short:
-  - type: toggle
-    entity_id: d6d12bfd49558d5435817b3f2aac7825
+      # ---- BOTTOM: hold = dimmer ----
+      - conditions: "{{ command == 'move' }}"
+        sequence:
+          - repeat:
+              count: 30
+              sequence:
+                - action: light.turn_on
+                  target:
+                    entity_id: ["{{ jess }}", "{{ niels }}", "{{ third }}"]
+                  data:
+                    brightness_step_pct: -7
+                    transition: 0.3
+                - delay: { milliseconds: 300 }
 
-button_right_long:
-  - type: brightness_decrease
-    step: 10
-    entity_id: d6d12bfd49558d5435817b3f2aac7825
+      # ---- LEFT: press = toggle Jess ----
+      - conditions: "{{ command == 'arrow_left_click' }}"
+        sequence:
+          - action: light.toggle
+            target:
+              entity_id: "{{ jess }}"
+
+      # ---- LEFT: hold = cycle brightness Jess ----
+      - conditions: "{{ command == 'arrow_left_hold' }}"
+        sequence:
+          - repeat:
+              count: 40
+              sequence:
+                - choose:
+                    - conditions: "{{ state_attr(jess, 'brightness') | int(0) >= 250 }}"
+                      sequence:
+                        - action: light.turn_on
+                          target: { entity_id: "{{ jess }}" }
+                          data: { brightness_pct: 5 }
+                  default:
+                    - action: light.turn_on
+                      target: { entity_id: "{{ jess }}" }
+                      data: { brightness_step_pct: 10 }
+                - delay: { milliseconds: 400 }
+
+      # ---- RIGHT: press = toggle Niels ----
+      - conditions: "{{ command == 'arrow_right_click' }}"
+        sequence:
+          - action: light.toggle
+            target:
+              entity_id: "{{ niels }}"
+
+      # ---- RIGHT: hold = cycle brightness Niels ----
+      - conditions: "{{ command == 'arrow_right_hold' }}"
+        sequence:
+          - repeat:
+              count: 40
+              sequence:
+                - choose:
+                    - conditions: "{{ state_attr(niels, 'brightness') | int(0) >= 250 }}"
+                      sequence:
+                        - action: light.turn_on
+                          target: { entity_id: "{{ niels }}" }
+                          data: { brightness_pct: 5 }
+                  default:
+                    - action: light.turn_on
+                      target: { entity_id: "{{ niels }}" }
+                      data: { brightness_step_pct: 10 }
+                - delay: { milliseconds: 400 }
+
+      # ---- Any release event just stops the running loop ----
+      - conditions: "{{ command in ['stop_with_on_off', 'stop', 'arrow_left_release', 'arrow_right_release'] }}"
+        sequence:
+          - stop: "Button released"
